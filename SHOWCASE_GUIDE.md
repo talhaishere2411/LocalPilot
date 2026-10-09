@@ -25,88 +25,91 @@ source .venv/bin/activate
 
 ---
 
-## Option 1: Automated Visual Demo (Recommended) ⭐
+## Demo Options (Choose Based on Audience)
 
-**Time: 2-3 minutes**
+### Option 1: Two-Phase Demo (BEST FOR JUDGES) ⭐⭐⭐
+
+**Time: 3-4 minutes**
 
 ```bash
-./demo_showcase.sh
+./demo_two_phase.sh
 ```
 
-**What judges will see:**
-- 🎨 Colorful ASCII art banners
-- 📁 Demo project creation with typo
-- ❌ Failing tests (shows the problem)
-- ⏸️ Pause for effect
-- 🤖 LocalPilot fixing the issue with all 4 gates visible
-- ✅ Tests passing (shows success)
-- 📊 Beautiful summary box
+**What happens:**
+- **Phase 1: The Problem** (1 min)
+  - Shows a 35-line Python file with NO docstrings
+  - Multiple functions, a class
+  - Tests FAIL because docstrings are missing
+  - Highlights the issues clearly
 
-**Pro tip:** This is fully automated and looks professional!
+- **Phase 2: LocalPilot Fixes It** (2-3 min)
+  - Shows all 4 safety gates in action
+  - Real LLM inference (qwen2.5-coder:7b)
+  - Real tree-sitter AST parsing
+  - Docstrings added, tests PASS
+  - Beautiful before/after comparison
+
+**Why this is best:**
+- ✅ Shows a REAL problem (not trivial)
+- ✅ Interactive (press Enter to continue)
+- ✅ Educational (explains each gate)
+- ✅ Impressive visual comparison
 
 ---
 
-## Option 2: Benchmark Showcase
+### Option 2: Technical Deep Dive ⭐⭐
 
-**Time: Choose 10 seconds OR 3-4 minutes**
+**Time: 4-5 minutes**
+
+```bash
+./demo_technical.sh
+```
+
+**What happens:**
+- **Step 1:** Create complex Python module (6 functions, 1 class)
+- **Step 2:** **EXPLICITLY SHOW** tree-sitter repo map generation
+- **Step 3:** Run LocalPilot with detailed gate visualization
+- **Step 4:** Analyze changes with statistics
+
+**Unique features:**
+- 🌳 **Shows tree-sitter output** explicitly
+- 📊 **Statistics**: lines of code, docstring count
+- 🔍 **Validates syntax** with Python's ast module
+- 💡 **Educational**: explains what each component does
+
+**Best for:** Technical judges who want to see the internals
+
+---
+
+### Option 3: Quick Demo (TIME-CONSTRAINED) ⭐
+
+**Time: 30 seconds**
+
+```bash
+./demo_quick.sh
+```
+
+**What happens:**
+- Fast, fully automated
+- Add docstring to simple function
+- All gates pass
+- Tests pass
+- Done!
+
+**Best for:** When you have <1 minute
+
+---
+
+### Option 4: Benchmark Showcase
+
+**Time: 10 seconds OR 3-4 minutes**
 
 ```bash
 ./demo_benchmark.sh
+# Choose option 1 (quick) or 2 (full)
 ```
 
-**Interactive menu:**
-1. Quick demo (one task) - 10 seconds
-2. Full benchmark (all 10 tasks) - 3-4 minutes
-
-**What judges will see:**
-- 🎨 Colorful task list
-- ⚡ Real-time progress with checkmarks/crosses
-- 📊 Beautiful results table at the end
-- 🎯 Key metrics highlighted
-
----
-
-## Option 3: Manual Demo (More Control)
-
-### Step 1: Show The Problem (30 seconds)
-
-```bash
-# Create demo with visible issue
-mkdir my_demo && cd my_demo
-
-cat > bug.py << 'EOF'
-def calculate(x, y):
-    resutl = x + y  # Typo!
-    return resutl
-EOF
-
-echo "📄 File with typo:"
-cat bug.py
-```
-
-### Step 2: Run LocalPilot (1 minute)
-
-```bash
-cd ..
-python -m agent.cli my_demo "Fix the typo: rename 'resutl' to 'result'"
-```
-
-**Point out to judges as it runs:**
-- 🟦 "Building repo map..." - Shows context gathering
-- 🟩 "Step 1/8" - Agent starting
-- ✓ Watch each gate pass:
-  - Gate 1: Path Guard
-  - Gate 2: Fuzzy Patch  
-  - Gate 3: Syntax Gate
-  - Gate 4: Test/Lint Gate
-- 🟢 "✓ Block 1 passed all gates"
-
-### Step 3: Show Success (30 seconds)
-
-```bash
-echo "✅ Fixed file:"
-cat my_demo/bug.py
-```
+**Shows:** Success rate across 10 real coding tasks
 
 ---
 
