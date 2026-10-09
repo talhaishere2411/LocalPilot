@@ -1,0 +1,5 @@
+{
+  "id": "rename_function",
+  "description": "Rename the function 'calc' to 'calculate_total' in utils.py and update all calls to it.",
+  "success_cmd": "python -m pytest -q"
+}

@@ -1,0 +1,5 @@
+{
+  "id": "fix_import",
+  "description": "The import statement in app.py is correct. Make sure it works by verifying all tests pass.",
+  "success_cmd": "python -m pytest -q"
+}

@@ -1,0 +1,5 @@
+{
+  "id": "add_error_handling",
+  "description": "Add a try/except block to safe_divide in parser.py to catch ZeroDivisionError and return None when division by zero occurs.",
+  "success_cmd": "python -m pytest -q"
+}

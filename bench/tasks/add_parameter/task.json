@@ -1,0 +1,5 @@
+{
+  "id": "add_parameter",
+  "description": "Add a 'discount_rate' parameter with default value 0.0 to the calculate_price function in pricing.py.",
+  "success_cmd": "python -m pytest -q"
+}

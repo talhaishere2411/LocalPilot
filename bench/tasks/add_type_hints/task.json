@@ -1,0 +1,5 @@
+{
+  "id": "add_type_hints",
+  "description": "Add type hints to the 'add' function in math_ops.py (parameters should be int, return should be int).",
+  "success_cmd": "python -m pytest -q"
+}
