@@ -5,12 +5,11 @@ Owner: Developer A (task A3).
 
 import os
 
-
 TOKEN_BUDGET = 1024
 
 
 def count_tokens(text: str) -> int:
-    """Count tokens without requiring torch or a gated model download.
+    """Count tokens without requiring PyTorch or a gated model download.
 
     If the environment variable LOCALPILOT_TOKENIZER points to a local
     tokenizer.json file, use it (via the `tokenizers` package). Otherwise,
@@ -29,5 +28,5 @@ def count_tokens(text: str) -> int:
 
 def build_repo_map(root_dir: str) -> str:
     """Return a repo map string for all .py files under `root_dir`,
-    truncated to fit TOKEN_BUDGET tokens."""
+    truncated to fit TOKEN_BUDGET tokens (use count_tokens)."""
     raise NotImplementedError

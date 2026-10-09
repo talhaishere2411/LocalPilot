@@ -1,0 +1,25 @@
+# Default: both developers review anything not listed below.
+* @DEV_A_GITHUB_USERNAME @DEV_B_GITHUB_USERNAME
+
+# Developer A (Engine)
+/src/agent/patch/ @DEV_A_GITHUB_USERNAME
+/src/agent/repomap/ @DEV_A_GITHUB_USERNAME
+/src/agent/parsing.py @DEV_A_GITHUB_USERNAME
+/src/build_parsers.py @DEV_A_GITHUB_USERNAME
+/skills/ @DEV_A_GITHUB_USERNAME
+/tests/test_validate.py @DEV_A_GITHUB_USERNAME
+/tests/test_patch.py @DEV_A_GITHUB_USERNAME
+/tests/test_pathguard.py @DEV_A_GITHUB_USERNAME
+/tests/test_checks.py @DEV_A_GITHUB_USERNAME
+/tests/test_repomap.py @DEV_A_GITHUB_USERNAME
+
+# Developer B (Interface)
+/src/agent/llm.py @DEV_B_GITHUB_USERNAME
+/src/agent/prompts.py @DEV_B_GITHUB_USERNAME
+/src/agent/orchestrator.py @DEV_B_GITHUB_USERNAME
+/src/agent/mocks.py @DEV_B_GITHUB_USERNAME
+/src/agent/cli.py @DEV_B_GITHUB_USERNAME
+/bench/ @DEV_B_GITHUB_USERNAME
+/tests/test_llm.py @DEV_B_GITHUB_USERNAME
+/tests/test_orchestrator.py @DEV_B_GITHUB_USERNAME
+/tests/test_cli.py @DEV_B_GITHUB_USERNAME

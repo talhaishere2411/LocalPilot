@@ -1,7 +1,9 @@
 """Benchmark runner: baseline vs harness vs harness + best-of-3.
 
-Owner: Developer B (task B4). Placeholder for the first push.
+Owner: Developer B (task B4). Task format: bench/tasks/TASK_FORMAT.md.
 """
+
+MODES = ("baseline", "harness", "harness_best_of_3")
 
 
 def main() -> None:

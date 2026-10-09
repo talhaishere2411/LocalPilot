@@ -11,7 +11,6 @@ requires-python = ">=3.10,<3.15"
 license = { text = "MIT" }
 
 [project.scripts]
-# The module agent.cli is created by Developer B on feat/interface.
 localpilot = "agent.cli:app"
 
 [tool.setuptools.packages.find]
@@ -20,3 +19,6 @@ where = ["src"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+markers = [
+    "llm: needs a running local model server (excluded in CI)",
+]

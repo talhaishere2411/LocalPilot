@@ -1,5 +1,6 @@
 """Parse SEARCH/REPLACE edit blocks out of raw model output.
 
+The block format is locked; see skills/safe-edit/SKILL.md.
 Owner: Developer A (task A2).
 """
 

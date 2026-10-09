@@ -1,5 +1,7 @@
 # LocalPilot: 6-Hour Hackathon Implementation Plan
 
+> The final repository scaffold, file ownership, and git workflow are defined in `CONTRIBUTING.md`. Python version guidance is in `PYTHON_COMPAT.md`. Where this document's setup commands differ from those files, follow those files.
+
 This document outlines a parallelized development plan for two developers to build the LocalPilot MVP in 6 hours.
 
 **Primary Goal:** A working demo where a user can issue a coding task, and the agent successfully (and safely) edits a Python file.
@@ -81,7 +83,7 @@ If time runs short, cut from the bottom of this list. Do not cut above the line.
 
    ```
    # requirements.txt
-   typer[all]
+   typer
    rich
    httpx
    tree-sitter
