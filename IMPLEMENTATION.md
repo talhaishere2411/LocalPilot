@@ -75,6 +75,8 @@ If time runs short, cut from the bottom of this list. Do not cut above the line.
    source .venv/bin/activate
    ```
 
+   **Python version:** use Python 3.12 (see `.python-version` and `PYTHON_COMPAT.md`). If your system Python is 3.13 or 3.14, create the venv with `uv venv --python 3.12 .venv` instead of `python3 -m venv .venv`.
+
 4. Create `requirements.txt` and install initial dependencies:
 
    ```
@@ -84,12 +86,14 @@ If time runs short, cut from the bottom of this list. Do not cut above the line.
    httpx
    tree-sitter
    tree-sitter-language-pack
-   transformers[torch]
+   tokenizers
    ruff
    pytest
    ```
 
    Then run `pip install -r requirements.txt`.
+
+   Tree-sitter packages are pinned to exact versions. Token counting uses count_tokens() in repomap/builder.py and does not require torch.
 
 5. Install Ollama from [ollama.com](https://ollama.com/) and pull the model:
 

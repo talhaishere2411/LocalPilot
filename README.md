@@ -110,13 +110,13 @@ graph TD
 | Lint/Test Gate | `ruff`, `pytest` | Verify candidate changes on a temporary copy |
 | CLI | `typer`, `rich` | Commands and rich terminal output |
 | HTTP Client | `httpx` | Communicate with the local LLM server |
-| Token Counting | `transformers` | Enforce context token budgets |
+| Token Counting | `tokenizers` | Enforce context token budgets |
 
 ## Getting Started
 
 ### Prerequisites
 
-- Python 3.10+
+- Python 3.12 recommended (3.10 to 3.14 supported; see PYTHON_COMPAT.md)
 - [Ollama](https://ollama.com/) installed and running.
 
 ### 1. Installation
