@@ -1,0 +1,5 @@
+{
+  "id": "add_default_value",
+  "description": "Add a default value of 8000 to the 'port' parameter in create_config function in settings.py.",
+  "success_cmd": "python -m pytest -q"
+}

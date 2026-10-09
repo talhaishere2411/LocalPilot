@@ -1,0 +1,5 @@
+{
+  "id": "add_docstring",
+  "description": "Add a docstring to the calculate_sum function in calculator.py explaining what it does.",
+  "success_cmd": "python -m pytest -q"
+}

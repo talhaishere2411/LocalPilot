@@ -1,0 +1,5 @@
+{
+  "id": "extract_constant",
+  "description": "Extract the magic number 3 in get_max_retries to a module-level constant named MAX_RETRIES in config.py.",
+  "success_cmd": "python -m pytest -q"
+}

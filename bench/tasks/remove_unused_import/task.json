@@ -1,0 +1,5 @@
+{
+  "id": "remove_unused_import",
+  "description": "Remove the unused imports 'os' and 'sys' from processor.py.",
+  "success_cmd": "python -m pytest -q"
+}

@@ -1,0 +1,5 @@
+{
+  "id": "fix_typo",
+  "description": "Fix the typo: rename the variable 'mesage' to 'message' in formatter.py.",
+  "success_cmd": "python -m pytest -q"
+}
