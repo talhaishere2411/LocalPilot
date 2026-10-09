@@ -111,9 +111,16 @@ echo -e "${YELLOW}📡 Sending task to local LLM (qwen2.5-coder:7b)...${NC}"
 echo -e "${BLUE}Task: ${WHITE}Fix the typo: rename 'resutl' to 'result' in calculator.py${NC}"
 echo ""
 
-# Run LocalPilot
+# Run LocalPilot (need to be in parent directory)
 cd ..
-python -m agent.cli demo_showcase "Fix the typo: rename the variable 'resutl' to 'result' in calculator.py"
+
+# Ensure we're in the right place
+DEMO_DIR="$(pwd)/demo_showcase"
+echo -e "${BLUE}Working on: ${WHITE}${DEMO_DIR}${NC}"
+echo ""
+
+# Run LocalPilot
+python -m agent run "Fix the typo: rename the variable 'resutl' to 'result' in calculator.py" --dir "${DEMO_DIR}"
 
 echo ""
 echo -e "${WHITE}═══════════════════════════════════════════════════════════════${NC}"
@@ -124,14 +131,14 @@ echo ""
 # Show the fixed file
 echo -e "${YELLOW}📄 Fixed file:${NC}"
 echo -e "${CYAN}─────────────────────────────────────────────────────────────${NC}"
-cat demo_showcase/calculator.py
+cat "${DEMO_DIR}/calculator.py"
 echo -e "${CYAN}─────────────────────────────────────────────────────────────${NC}"
 echo ""
 
 # Run tests to show success
 echo -e "${YELLOW}🧪 Running tests (should pass now):${NC}"
 echo -e "${CYAN}─────────────────────────────────────────────────────────────${NC}"
-cd demo_showcase
+cd "${DEMO_DIR}"
 python -m pytest test_calculator.py -v
 cd ..
 echo -e "${CYAN}─────────────────────────────────────────────────────────────${NC}"
