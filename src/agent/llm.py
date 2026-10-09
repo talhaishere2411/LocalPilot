@@ -5,7 +5,7 @@ Owner: Developer B (task B1).
 
 from collections.abc import Iterator
 
-DEFAULT_MODEL = "gemma:2b-instruct"
+DEFAULT_MODEL = "gemma3:4b-instruct"
 DEFAULT_BASE_URL = "http://localhost:11434/v1"
 
 
