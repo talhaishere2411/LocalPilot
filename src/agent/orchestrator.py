@@ -12,68 +12,17 @@ from pathlib import Path
 
 from rich.console import Console
 
-from .llm import LLMClient, DEFAULT_MODEL
-from .patch.parse_blocks import EditBlock
-from .patch.checks import CheckResult
-
-# --- MOCK IMPLEMENTATIONS FOR DEV B ---
-
-def mock_build_repo_map(root_dir: str) -> str:
-    """Mock repo map for testing."""
-    return "mock/path.py\n  - def mock_function:L5"
-
-
-def mock_parse_edit_blocks(text: str) -> list[EditBlock]:
-    """Mock parser - returns a sample block if the model's response contains 'SEARCH'."""
-    if "SEARCH" in text:
-        return [EditBlock(path="mock/path.py", search_block="old", replace_block="new")]
-    return []
-
-
-def mock_resolve_safe_path(root_dir: str, path: str) -> tuple[str | None, str | None]:
-    """Mock path guard - always succeeds."""
-    return (f"{root_dir}/{path}", None)
-
-
-def mock_apply_fuzzy_patch(file_content: str, block: EditBlock) -> str | None:
-    """Mock fuzzy patcher - always succeeds."""
-    return "This is the new, patched file content."
-
-
-def mock_is_syntax_valid(old_content: str, new_content: str) -> bool:
-    """Mock syntax validator - always passes."""
-    return True
-
-
-def mock_run_checks(root_dir: str, rel_path: str, new_content: str) -> CheckResult:
-    """Mock check runner - always passes."""
-    return CheckResult(ok=True, stage="skipped", output="")
-
-# --- END MOCKS ---
+from .llm import DEFAULT_MODEL, LLMClient
+from .patch.checks import CheckResult, run_checks
+from .patch.fuzzy import apply_fuzzy_patch
+from .patch.parse_blocks import EditBlock, parse_edit_blocks
+from .patch.pathguard import resolve_safe_path
+from .patch.validate import is_syntax_valid
+from .prompts import build_system_prompt
+from .repomap.builder import build_repo_map
 
 
 MAX_STEPS = 8
-
-SYSTEM_PROMPT = """You are a coding assistant that edits files safely using SEARCH/REPLACE blocks.
-
-When the user asks you to change code, respond with one or more edit blocks in this exact format:
-
-path/to/file.py
-<<<<<<< SEARCH
-exact lines to find
-=======
-replacement lines
->>>>>>> REPLACE
-
-Rules:
-1. The SEARCH block must match the existing file content EXACTLY (including whitespace)
-2. You can have multiple edit blocks in one response
-3. Only output edit blocks when making changes, otherwise just respond normally
-4. Keep SEARCH blocks small and focused (3-10 lines typically)
-
-Repository overview:
-{repo_map}
-"""
 
 
 class Orchestrator:
@@ -96,8 +45,8 @@ class Orchestrator:
         self.console.print(f"Model: {self.model}, best_of: {self.best_of}\n")
         
         # Build repo map and create system prompt
-        repo_map = mock_build_repo_map(str(self.root_dir))
-        system_prompt = SYSTEM_PROMPT.format(repo_map=repo_map)
+        repo_map = build_repo_map(str(self.root_dir))
+        system_prompt = build_system_prompt(repo_map)
         
         # Initialize message history
         self.messages = [
@@ -118,7 +67,7 @@ class Orchestrator:
                 self.messages.append({"role": "assistant", "content": response})
                 
                 # Parse and verify blocks
-                blocks = mock_parse_edit_blocks(response)
+                blocks = parse_edit_blocks(response)
                 
                 if not blocks:
                     self.console.print("[bold green]✓[/bold green] No edit blocks found. Task complete.")
@@ -140,7 +89,7 @@ class Orchestrator:
                     
                     # Sample with higher temperature for variety
                     response = self._get_model_response(temperature=0.7)
-                    blocks = mock_parse_edit_blocks(response)
+                    blocks = parse_edit_blocks(response)
                     
                     if not blocks:
                         self.console.print("  [dim]No edit blocks found[/dim]")
@@ -180,7 +129,7 @@ class Orchestrator:
                 self.console.print(f"[bold green]Assistant (best candidate):[/bold green]\n{best_response}\n")
                 self.messages.append({"role": "assistant", "content": best_response})
                 
-                blocks = mock_parse_edit_blocks(best_response)
+                blocks = parse_edit_blocks(best_response)
                 if not blocks:
                     self.console.print("[bold green]✓[/bold green] No edit blocks found. Task complete.")
                     break
@@ -235,33 +184,36 @@ class Orchestrator:
         # Gate 1: Path Guard
         if not quiet:
             self.console.print("  [dim]Gate 1: Path Guard[/dim]")
-        resolved_path, error = mock_resolve_safe_path(str(self.root_dir), block.path)
+        resolved_path, error = resolve_safe_path(str(self.root_dir), block.path)
         if error:
             return False, f"Path Guard failed for {block.path}: {error}", None
         
-        # In real implementation, would read file here
-        # For now, use mock content
-        old_content = "mock old file content"
+        # Read the actual file
+        old_content = Path(resolved_path).read_text(encoding="utf-8")
         
         # Gate 2: Fuzzy Patch
         if not quiet:
             self.console.print("  [dim]Gate 2: Fuzzy Patch[/dim]")
-        new_content = mock_apply_fuzzy_patch(old_content, block)
+        new_content = apply_fuzzy_patch(old_content, block)
         if new_content is None:
             return False, f"Fuzzy Patch failed for {block.path}: Could not find a unique match for SEARCH block", None
         
         # Gate 3: Syntax Gate
         if not quiet:
             self.console.print("  [dim]Gate 3: Syntax Gate[/dim]")
-        if not mock_is_syntax_valid(old_content, new_content):
+        if not is_syntax_valid(old_content, new_content):
             return False, f"Syntax Gate failed for {block.path}: New code has syntax errors", None
         
         # Gate 4: Test/Lint Gate
         if not quiet:
             self.console.print("  [dim]Gate 4: Test/Lint Gate[/dim]")
-        check_result = mock_run_checks(str(self.root_dir), block.path, new_content)
+        
+        # Get relative path for checks
+        rel_path = Path(resolved_path).relative_to(self.root_dir).as_posix()
+        check_result = run_checks(str(self.root_dir), rel_path, new_content)
         if not check_result.ok:
             return False, f"Test/Lint Gate failed for {block.path} at {check_result.stage}:\n{check_result.output}", None
         
-        # All gates passed - in real implementation would write file here
+        # All gates passed - write the file
+        Path(resolved_path).write_text(new_content, encoding="utf-8")
         return True, f"Successfully applied patch to {block.path}", new_content

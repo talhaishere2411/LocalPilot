@@ -25,4 +25,11 @@ Rules:
 
 def build_system_prompt(repo_map: str) -> str:
     """Return the system prompt: role, EDIT_FORMAT_INSTRUCTIONS, and `repo_map`."""
-    raise NotImplementedError
+    return f"""\
+You are a coding assistant that edits files safely using SEARCH/REPLACE blocks.
+
+{EDIT_FORMAT_INSTRUCTIONS}
+
+Repository overview:
+{repo_map}
+"""
