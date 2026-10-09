@@ -98,7 +98,7 @@ If time runs short, cut from the bottom of this list. Do not cut above the line.
 5. Install Ollama from [ollama.com](https://ollama.com/) and pull the model:
 
    ```bash
-   ollama pull gemma:2b-instruct
+   ollama pull gemma3:4b-instruct
    ```
 
 6. **Verify the LLM is running.** Run this `curl` command. If it returns a JSON response, you are good to go.
@@ -106,7 +106,7 @@ If time runs short, cut from the bottom of this list. Do not cut above the line.
    ```bash
    curl http://localhost:11434/v1/chat/completions \
      -H "Content-Type: application/json" \
-     -d '{"model": "gemma:2b-instruct", "messages":[{"role":"user","content":"Who are you?"}], "stream": false}'
+     -d '{"model": "gemma3:4b-instruct", "messages":[{"role":"user","content":"Who are you?"}], "stream": false}'
    ```
 
 7. Developer A creates a branch `feat/engine`; Developer B creates a branch `feat/interface`.
@@ -202,7 +202,7 @@ Your goal is to create a set of pure, testable functions. You will work primaril
    - def my_function:L25
    ```
 
-6. Use the `transformers` tokenizer (for `gemma-2b`) to count tokens and truncate the final string until it fits the `TOKEN_BUDGET` (1024).
+6. Use the `transformers` tokenizer (for `gemma3-4b`) to count tokens and truncate the final string until it fits the `TOKEN_BUDGET` (1024).
 
 #### Task A4: The Path Guard (`src/agent/patch/pathguard.py`) — about 30 minutes
 
@@ -234,7 +234,7 @@ Your goal is to build the user-facing parts and the main agent loop. You will us
 #### Task B1: The LLM Client & CLI (`src/agent/llm.py` & `src/agent/cli.py`)
 
 1. In `llm.py`, implement the `LLMClient` class with a `get_completion` streaming method that uses `httpx` to talk to the Ollama endpoint (`http://localhost:11434/v1`). Accept optional `temperature` and `model` parameters (needed for best-of-N and the benchmark).
-2. In `cli.py`, create a `typer` app with a `run(task: str, dir: str = ".", model: str = "gemma:2b-instruct", best_of: int = 1)` command.
+2. In `cli.py`, create a `typer` app with a `run(task: str, dir: str = ".", model: str = "gemma3:4b-instruct", best_of: int = 1)` command.
 3. As a first step, have the `run` command simply instantiate the `LLMClient`, send the task, and stream the response to the console using `rich.console.Console`. This verifies the end-to-end connection to the LLM.
 
 #### Task B2: The Orchestrator with Mocks (`src/agent/orchestrator.py`)

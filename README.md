@@ -67,7 +67,7 @@ graph TD
     User["User (CLI)"] --> Orchestrator
 
     subgraph "Local Machine"
-        LLM["Gemma / Qwen (4-bit LLM)<br/>via Ollama / mlx-lm"]
+        LLM["Gemma3 / Qwen (4-bit LLM)<br/>via Ollama / mlx-lm"]
     end
 
     subgraph "LocalPilot Harness"
@@ -103,7 +103,7 @@ graph TD
 | Layer | Tool | Purpose |
 |---|---|---|
 | Inference | `Ollama` or `mlx-lm` | Run a 4-bit quantized model locally |
-| Model (Default) | `gemma:2b-instruct` | Small, powerful open-weight model |
+| Model (Default) | `gemma3:4b-instruct` | Small, powerful open-weight model |
 | Parsing | `tree-sitter`, `tree-sitter-language-pack` | AST parsing for syntax checks and repo map |
 | Patching | `difflib.SequenceMatcher` | Fuzzy-match SEARCH blocks |
 | Path Guard | `pathlib`, `difflib.get_close_matches` | Confine edits to the project and suggest real paths |
@@ -135,14 +135,14 @@ pip install -r requirements.txt
 python src/build_parsers.py
 ```
 
-### 2. Setup the Local LLM (Gemma)
+### 2. Setup the Local LLM (Gemma3)
 
 ```bash
-# Pull a small Gemma model via Ollama
-ollama pull gemma:2b-instruct
+# Pull a small Gemma3 model via Ollama
+ollama pull gemma3:4b-instruct
 ```
 
-A 2B model can struggle with the edit-block format on harder tasks. If you have the memory, a larger model such as `qwen2.5-coder:7b` is a drop-in upgrade; set it with the `--model` flag.
+A 4B model can struggle with the edit-block format on harder tasks. If you have the memory, a larger model such as `qwen2.5-coder:7b` is a drop-in upgrade; set it with the `--model` flag.
 
 ### 3. Run the Agent
 
@@ -170,7 +170,7 @@ localpilot run "<task>" --dir /path/to/project --model qwen2.5-coder:7b
 LocalPilot ships with a small task suite in `bench/` to measure what the harness adds. Each task is run on the same model twice: once with raw, ungated edits (baseline) and once through the full verification pipeline.
 
 ```bash
-python bench/run_bench.py --model gemma:2b-instruct
+python bench/run_bench.py --model gemma3:4b-instruct
 ```
 
 Fill in the table below with your own results before submission:
