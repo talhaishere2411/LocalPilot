@@ -3,9 +3,12 @@
 Owner: Developer B (task B1).
 """
 
+import json
 from collections.abc import Iterator
 
-DEFAULT_MODEL = "gemma3:4b-instruct"
+import httpx
+
+DEFAULT_MODEL = "gemma3:4b"
 DEFAULT_BASE_URL = "http://localhost:11434/v1"
 
 
@@ -16,7 +19,9 @@ class LLMClient:
         base_url: str = DEFAULT_BASE_URL,
         timeout: float = 120.0,
     ) -> None:
-        raise NotImplementedError
+        self.model = model
+        self.base_url = base_url
+        self.timeout = timeout
 
     def get_completion(
         self,
@@ -28,4 +33,46 @@ class LLMClient:
 
         `model` overrides the client's default model for this call.
         """
-        raise NotImplementedError
+        use_model = model if model is not None else self.model
+        
+        payload = {
+            "model": use_model,
+            "messages": messages,
+            "temperature": temperature,
+            "stream": True,
+        }
+        
+        with httpx.Client(timeout=self.timeout) as client:
+            with client.stream(
+                "POST",
+                f"{self.base_url}/chat/completions",
+                json=payload,
+            ) as response:
+                response.raise_for_status()
+                
+                for line in response.iter_lines():
+                    line = line.strip()
+                    if not line:
+                        continue
+                    
+                    # Skip "data: " prefix
+                    if line.startswith("data: "):
+                        line = line[6:]
+                    
+                    # Skip [DONE] marker
+                    if line == "[DONE]":
+                        break
+                    
+                    # Parse JSON chunk
+                    try:
+                        chunk = json.loads(line)
+                        
+                        # Extract content from delta
+                        if "choices" in chunk and len(chunk["choices"]) > 0:
+                            delta = chunk["choices"][0].get("delta", {})
+                            content = delta.get("content", "")
+                            if content:
+                                yield content
+                    except json.JSONDecodeError:
+                        # Skip malformed JSON
+                        continue
