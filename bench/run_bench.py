@@ -52,7 +52,7 @@ def load_tasks():
 def run_baseline(task_desc: str, project_copy: Path) -> dict:
     """Run baseline mode: direct model call with no gates."""
     from agent.llm import LLMClient
-    from agent.patch.parse_blocks import EditBlock
+    from agent.patch.parse_blocks import parse_edit_blocks
     
     client = LLMClient()
     
@@ -67,56 +67,47 @@ def run_baseline(task_desc: str, project_copy: Path) -> dict:
     for chunk in client.get_completion(messages):
         response += chunk
     
-    # Parse blocks (mock for now, would use real parser)
-    # For baseline, just parse and apply with exact string replacement
-    blocks = parse_blocks_simple(response)
+    # Parse blocks using real parser
+    blocks = parse_edit_blocks(response)
     
+    # Apply with exact string replacement (no fuzzy matching, no gates)
     for block in blocks:
-        file_path = project_copy / block["path"]
+        file_path = project_copy / block.path
         if not file_path.exists():
             continue
         
-        content = file_path.read_text()
-        # Exact string replacement (no fuzzy matching)
-        if block["search"] in content:
-            new_content = content.replace(block["search"], block["replace"], 1)
-            file_path.write_text(new_content)
+        try:
+            content = file_path.read_text()
+            # Exact string replacement (no fuzzy matching)
+            if block.search_block in content:
+                new_content = content.replace(block.search_block, block.replace_block, 1)
+                file_path.write_text(new_content)
+        except Exception:
+            # Skip on any error
+            continue
     
     return {"blocks_attempted": len(blocks)}
-
-
-def parse_blocks_simple(text: str) -> list[dict]:
-    """Simple parser for SEARCH/REPLACE blocks."""
-    import re
-    
-    pattern = r'(.+?)\n<<<<<<< SEARCH\n(.+?)\n=======\n(.+?)\n>>>>>>> REPLACE'
-    blocks = []
-    
-    for match in re.finditer(pattern, text, re.DOTALL):
-        blocks.append({
-            "path": match.group(1).strip(),
-            "search": match.group(2),
-            "replace": match.group(3),
-        })
-    
-    return blocks
 
 
 def run_harness(task_desc: str, project_copy: Path, best_of: int = 1) -> dict:
     """Run with full orchestrator."""
     from agent.orchestrator import Orchestrator
     
-    orchestrator = Orchestrator(root_dir=str(project_copy), best_of=best_of)
-    
-    # Silence console output during benchmark
-    import io
-    from contextlib import redirect_stdout, redirect_stderr
-    
-    f = io.StringIO()
-    with redirect_stdout(f), redirect_stderr(f):
-        orchestrator.run(task_desc)
-    
-    return {}
+    try:
+        orchestrator = Orchestrator(root_dir=str(project_copy), best_of=best_of)
+        
+        # Silence console output during benchmark
+        import io
+        from contextlib import redirect_stdout, redirect_stderr
+        
+        f = io.StringIO()
+        with redirect_stdout(f), redirect_stderr(f):
+            orchestrator.run(task_desc)
+        
+        return {}
+    except Exception as e:
+        # Return error info but don't crash
+        return {"error": str(e)}
 
 
 def check_success(project_dir: Path, success_cmd: str) -> bool:
@@ -204,20 +195,44 @@ def run_benchmark_task(task: dict, mode: str) -> dict:
 
 def main() -> None:
     """Run the full benchmark across all modes."""
+    import argparse
+    
+    parser = argparse.ArgumentParser(description="Run LocalPilot benchmark")
+    parser.add_argument("--model", default="gemma3:4b", help="Model to use (default: gemma3:4b)")
+    parser.add_argument("--mode", choices=MODES, help="Run only this mode (default: all)")
+    parser.add_argument("--task", help="Run only this task ID (default: all)")
+    args = parser.parse_args()
+    
     console.print("[bold blue]LocalPilot Benchmark Runner[/bold blue]\n")
+    console.print(f"Model: {args.model}\n")
+    
+    # Set model for LLM client
+    import os
+    os.environ["LOCALPILOT_MODEL"] = args.model
     
     # Load tasks
     tasks = load_tasks()
-    console.print(f"Loaded {len(tasks)} benchmark tasks\n")
+    
+    # Filter tasks if specified
+    if args.task:
+        tasks = [t for t in tasks if t["id"] == args.task]
+        if not tasks:
+            console.print(f"[red]Task '{args.task}' not found![/red]")
+            sys.exit(1)
+    
+    console.print(f"Loaded {len(tasks)} benchmark task(s)\n")
     
     if not tasks:
         console.print("[red]No tasks found![/red]")
         sys.exit(1)
     
-    # Run benchmark for each mode
-    results = {mode: [] for mode in MODES}
+    # Determine which modes to run
+    modes_to_run = [args.mode] if args.mode else MODES
     
-    for mode in MODES:
+    # Run benchmark for each mode
+    results = {mode: [] for mode in modes_to_run}
+    
+    for mode in modes_to_run:
         console.print(f"[cyan]Running mode: {mode}[/cyan]")
         
         for task in tasks:
@@ -232,15 +247,15 @@ def main() -> None:
     
     # Compute statistics
     stats = {}
-    for mode in MODES:
+    for mode in modes_to_run:
         mode_results = results[mode]
         total = len(mode_results)
         
         stats[mode] = {
             "passed": sum(1 for r in mode_results if r["success"]),
             "total": total,
-            "syntax_error_rate": sum(1 for r in mode_results if r["syntax_errors"] > 0) / total * 100,
-            "broken_test_rate": sum(1 for r in mode_results if r["tests_broken"]) / total * 100,
+            "syntax_error_rate": sum(1 for r in mode_results if r["syntax_errors"] > 0) / total * 100 if total > 0 else 0,
+            "broken_test_rate": sum(1 for r in mode_results if r["tests_broken"]) / total * 100 if total > 0 else 0,
         }
     
     # Display results table
@@ -250,7 +265,7 @@ def main() -> None:
     table.add_column("Syntax Error Rate", justify="right")
     table.add_column("Broken Test Rate", justify="right")
     
-    for mode in MODES:
+    for mode in modes_to_run:
         s = stats[mode]
         table.add_row(
             mode.replace("_", " ").title(),
@@ -266,10 +281,11 @@ def main() -> None:
     results_file = Path(__file__).parent / "results.md"
     with open(results_file, "w") as f:
         f.write("# Benchmark Results\n\n")
+        f.write(f"Model: {args.model}\n\n")
         f.write("| Mode | Tasks Passed | Syntax Error Rate | Broken Test Rate |\n")
         f.write("|------|--------------|-------------------|------------------|\n")
         
-        for mode in MODES:
+        for mode in modes_to_run:
             s = stats[mode]
             f.write(f"| {mode.replace('_', ' ').title()} | {s['passed']}/{s['total']} | {s['syntax_error_rate']:.1f}% | {s['broken_test_rate']:.1f}% |\n")
     
