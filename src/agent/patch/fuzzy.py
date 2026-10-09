@@ -124,7 +124,7 @@ def apply_fuzzy_patch(file_content: str, block: EditBlock) -> str | None:
     replace_block = block.replace_block.replace("\r\n", "\n").replace("\r", "\n")
     
     search_lines = search_block.split("\n")
-    replace_lines = replace_block.split("\n")
+    replace_lines = replace_block.split("\n") if replace_block else []
     
     # Find match
     match = _find_match(file_lines, search_lines)

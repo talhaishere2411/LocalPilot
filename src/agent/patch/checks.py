@@ -77,9 +77,19 @@ def _run_command(cmd: list[str], cwd: str, timeout: int, env: dict | None = None
 def run_checks(root_dir: str, rel_path: str, new_content: str) -> CheckResult:
     """Write `new_content` to `rel_path` inside a temporary copy of `root_dir`
     and run lint and tests there. The real project is never modified."""
-    # Refuse unsafe paths
+    # Refuse unsafe paths (check for both Unix and Windows absolute paths)
     path_obj = Path(rel_path)
-    if path_obj.is_absolute() or ".." in path_obj.parts:
+    
+    # Check for path traversal
+    if ".." in path_obj.parts:
+        return CheckResult(False, "skipped", "Refused: path is outside the project.")
+    
+    # Check for absolute paths (Unix-style or Windows-style)
+    if path_obj.is_absolute():
+        return CheckResult(False, "skipped", "Refused: path is outside the project.")
+    
+    # Check for Windows absolute paths on Unix systems (e.g., "C:\\...")
+    if rel_path and len(rel_path) >= 2 and rel_path[1:3] == ":\\":
         return CheckResult(False, "skipped", "Refused: path is outside the project.")
     
     # Create temporary directory
