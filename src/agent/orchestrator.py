@@ -18,7 +18,7 @@ from .patch.fuzzy import apply_fuzzy_patch
 from .patch.parse_blocks import EditBlock, parse_edit_blocks
 from .patch.pathguard import resolve_safe_path
 from .patch.validate import is_syntax_valid
-from .prompts import build_system_prompt
+from .prompts import build_system_prompt, build_task_message
 from .repomap.builder import build_repo_map
 
 
@@ -48,10 +48,13 @@ class Orchestrator:
         repo_map = build_repo_map(str(self.root_dir))
         system_prompt = build_system_prompt(repo_map)
         
+        # Build initial task message with file contents
+        task_message = self._build_initial_message(task, repo_map)
+        
         # Initialize message history
         self.messages = [
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": task}
+            {"role": "user", "content": task_message}
         ]
         
         # Agent loop
@@ -144,6 +147,37 @@ class Orchestrator:
         
         if step == MAX_STEPS - 1:
             self.console.print("[yellow]⚠[/yellow] Reached maximum steps")
+    
+    def _build_initial_message(self, task: str, repo_map: str) -> str:
+        """Build initial task message with file contents from repo map."""
+        from .prompts import build_task_message
+        
+        # Start with the task message (includes few-shot example)
+        message_parts = [build_task_message(task)]
+        
+        # Extract file paths from repo map
+        file_paths = []
+        for line in repo_map.split("\n"):
+            line = line.strip()
+            # Lines that are just file paths (not definitions)
+            if line and not line.startswith("-") and not line.startswith("(") and not line.startswith("..."):
+                file_paths.append(line)
+        
+        # Add file contents
+        if file_paths:
+            message_parts.append("\n**Current file contents:**\n")
+            
+            for rel_path in file_paths:
+                full_path = self.root_dir / rel_path
+                if full_path.exists() and full_path.suffix == ".py":
+                    try:
+                        content = full_path.read_text(encoding="utf-8")
+                        message_parts.append(f"\n`{rel_path}`:\n```python\n{content}```\n")
+                    except Exception:
+                        # Skip files that can't be read
+                        continue
+        
+        return "\n".join(message_parts)
     
     def _get_model_response(self, temperature: float = 0.2) -> str:
         """Get a single response from the model."""
